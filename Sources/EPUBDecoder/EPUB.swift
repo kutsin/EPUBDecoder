@@ -65,7 +65,7 @@ public final class EPUB: NSObject {
         return metadata.find(byProperty: "media:duration", refinedBy: ID)?.value
     }
     
-    func plainText() throws -> String {
+    public func plainText() throws -> String {
         elements = []
         for reference in flatTableOfContents {
             guard let resource = reference.resource else {
