@@ -19,15 +19,15 @@ public final class EPUB: NSObject {
         return smils.smils.count > 0
     }
 
-    var title: String? {
+    public var title: String? {
         return metadata.titles.first
     }
 
-    var authorName: String? {
+    public var authorName: String? {
         return metadata.creators.first?.name
     }
     
-    var duration: String? {
+    public var duration: String? {
         return metadata.find(byProperty: "media:duration")?.value
     }
 
