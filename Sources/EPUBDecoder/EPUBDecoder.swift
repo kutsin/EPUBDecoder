@@ -3,12 +3,8 @@ import AEXML
 import ZIPFoundation
 
 public final class EPUBDecoder {
-    public static func decode(sourceURL: URL,
-                              targetURL: URL? = nil,
-                              shouldRemoveSourceFile: Bool = true) throws -> EPUB {
-        return try _EPUBDecoder().decode(sourceURL: sourceURL,
-                                         targetURL: targetURL,
-                                         shouldRemoveSourceFile: shouldRemoveSourceFile)
+    public static func decode(sourceURL: URL) throws -> EPUB {
+        return try _EPUBDecoder().decode(sourceURL: sourceURL)
     }
 }
 
@@ -18,38 +14,29 @@ private final class _EPUBDecoder {
     
     private var resourcesURL: URL!
     private var sourceURL: URL?
-    private var shouldRemoveSourceFile = true
 
     private let fileExtension = "epub"
 
-    func decode(sourceURL: URL,
-                targetURL: URL? = nil,
-                shouldRemoveSourceFile: Bool = true) throws -> EPUB {
+    func decode(sourceURL: URL) throws -> EPUB {
         self.sourceURL = sourceURL
-        self.shouldRemoveSourceFile = shouldRemoveSourceFile
 
         let fileManager = FileManager.default
         let fileName = sourceURL.lastPathComponent
-        var bookURL: URL
+        let bookURL = fileManager.urls(
+            for: .documentDirectory,
+            in: .userDomainMask)[0]
+            .appendingPathComponent("Temp")
+            .appendingPathComponent(fileName)
         
-        if let targetURL = targetURL,
-           fileManager.fileExists(atPath: targetURL.path) {
-            bookURL = targetURL
-        } else {
-            bookURL = fileManager.urls(for: .documentDirectory,
-                                       in: .userDomainMask)[0]
-        }
-        bookURL = bookURL.appendingPathComponent(fileName)
-        
-        if !fileManager.fileExists(atPath: bookURL.path) {
+        var isDirectory: ObjCBool = false
+        let exists = fileManager.fileExists(atPath: bookURL.path,
+                                            isDirectory: &isDirectory)
+        if !exists && !isDirectory.boolValue {
             guard fileManager.fileExists(atPath: sourceURL.path),
                   sourceURL.pathExtension == fileExtension else {
                 throw Error.bookNotAvailable(path: sourceURL.path)
             }
             try fileManager.unzipItem(at: sourceURL, to: bookURL)
-            if shouldRemoveSourceFile {
-                try fileManager.removeItem(at: sourceURL)
-            }
         }
 
         try addSkipBackupAttributeToItemAtURL(bookURL)
